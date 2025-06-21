@@ -1,927 +1,620 @@
 [org 0x0100]
-
-
 jmp start
-
-
-entrym1: db 'Name of file: $'
-
-chkm1: db 'Reading file...$'
-
-;chkm31: db '
-
-chkm2: db 'Success!!!$'
-chkm3: db 'Press any key to start game...'
-
-m1: db 'Error! Invalid file name. Try again...$'
-m2: db 'Error! Couldn', 27h, 't read file. Try again...$'
-errm3: db 'what ifds this error?$'
-
-m3: db 'Bytes in file: $'
-
-m41: db 'Points: $'
-m42: db 'exit/target'
-m43: db 'boulder'
-m44: db 'diamond'
-
-m51: db 'Collect points and reach the target!$'
-
-m61: db 'Oops! Beware of falling objects! Try again!$'
-m62: db 'Looks like you left quite a few points... try again!$'
-m63: db 'You missed a couple of points ;) ... try again!$'
-m64:db 'Wow! You make it look so easy! Invite others to play sometime!$'
-m65: db 'Wait... gone already? Try again!$'
-
-
-nl: db 0xa, 0xa, '$'
-
-
-
-
-buffer: times 2000 db 0
-filen: db 'file.txt', 0
-
-fn: 	db 50
-	db 0
-	 times 50 db 0
-
-buff: times 10 db 0
-pts: times 5 db 0
-;------------------------------------------------------------------
-
-
-
-
-
-whathuh:  mov ah, 9h
-	mov dx, nl
-	int 21h	
-	mov ah, 9h
-	mov dx, nl
-	int 21h	
-	mov ah, 9h
-	mov dx, nl
-	int 21h	
-	mov ah, 9h
-	mov dx, nl
-	int 21h	
-
-	mov ah, 9h
-	mov dx, errm3
-	int 21h	
-	jmp end
-
-
-err1:	mov ah, 9h
-	mov dx, nl
-	int 21h	
-
-	mov ah, 9h
-	mov dx, m1
-	int 21h
-
-	mov ah, 9h
-	mov dx, nl
-	int 21h
-
-	jmp end
-
-err2:	mov ah, 9h
-	mov dx, m2
-	int 21h
-
-	mov ah, 9h
-	mov dx, nl
-	int 21h
-
-	jmp end
-
-
-clrscr:	mov ax, 0xb800
-	mov es, ax
-	xor di, di
-	mov cx, 2000
-	mov ax, 0720h
-
-	rep stosw
-	ret
-
-prtPoints:	
-	mov ax, 0xb800
-	mov es, ax
-	mov di, 326
-	mov si, m41
-	mov ah, 0x0f
-	mov cx, 8
-
-prtPointsL1:
-	mov al, [si]
-	mov [es:di], ax     ;loop printing "print: "
-	inc si
-	add di, 2 
-	loop prtPointsL1
-	
-	;mov al, 0x30
-	;mov [es:di], ax	;points count
-	;add di, 30 
-
-
-mov ax, 0
-XOR BX, BX          ; Set BX to 0 (used to count digits)
-MOV SI,  pts   ; Point SI to the buffer
-add si, 2
-
-; Convert the value to a string
-
-convertpts:
-XOR DX, DX          ; Clear DX for division
-MOV CX, 10          ; Divide by 10 to extract the last digit
-DIV CX              ; Divide AX by CX
-ADD DL, '0'         ; Convert the remainder to ASCII
-MOV [SI], DL        ; Store the digit in the buffer
-dec SI              ; Move to the next position in the buffer
-INC BX              ; Increment the digit count
-CMP AX, 0           ; Check if value is 0
-JNE convertpts         ; If not, repeat the conversion
-
-
-	mov ah, 0x0f
-	mov si, pts
-	mov cx, 3
-	
-
-prtPointsL11:
-	mov al, [si]
-	mov [es:di], ax     ;loop printing the points digits
-	inc si 
-	add di, 2 
-	loop prtPointsL11
-
-	;mov word [es:342], 0x1020
-	add di, 28
-
-
-
-
-
-
-
-
-	mov ax, 0x507F	;legend target/exit
-	mov [es:di], ax
-	add di, 4
-
-	mov ax, 0xb800
-	mov es, ax
-	mov si, m42
-	mov cx, 11
-	mov ah, 0x0f
-
-prtPointsL2:
-	mov al, [si]
-	mov [es:di], ax     
-	inc si
-	add di, 2 
-	loop prtPointsL2
-
-	add di, 8
-	mov ax, 0x0609	;legend bouldah
-	mov [es:di], ax
-	add di, 4
-
-	mov ax, 0xb800
-	mov es, ax
-	mov si, m43
-	mov cx, 7
-	mov ah, 0x0f
-
-prtPointsL3:
-	mov al, [si]
-	mov [es:di], ax     
-	inc si
-	add di, 2 
-	loop prtPointsL3	
-
-	add di, 8
-	mov ax, 0x0304	;legend diamondo
-	mov [es:di], ax
-	add di, 4
-
-	mov ax, 0xb800
-	mov es, ax
-	mov si, m44
-	mov cx, 7
-	mov ah, 0x0f
-
-prtPointsL4:
-	mov al, [si]
-	mov [es:di], ax     
-	inc si
-	add di, 2 
-	loop prtPointsL4
-
-	ret
-
-
-
-
-
-
-
-
-
-
-
-
-
-PointsTracker:
-
-	push bp
-	mov bp, sp
-	
-	push bx
-	push cx	;save old values
-	push si
-	push ax
-	push di
-
-	mov ax, [bp+4]
-
-
-XOR BX, BX          ; Set BX to 0 (used to count digits)
-MOV SI,  pts   ; Point SI to the buffer
-add si, 2
-
-; Convert the value to a string
-
-PointsTrackerL1:
-XOR DX, DX          ; Clear DX for division
-MOV CX, 10          ; Divide by 10 to extract the last digit
-DIV CX              ; Divide AX by CX
-ADD DL, '0'         ; Convert the remainder to ASCII
-MOV [SI], DL        ; Store the digit in the buffer
-dec SI              ; Move to the next position in the buffer
-INC BX              ; Increment the digit count
-CMP AX, 0           ; Check if value is 0
-JNE PointsTrackerL1        ; If not, repeat the conversion
-
-
-	mov ah, 0x0f
-	mov si, pts
-	mov cx, 3
-	mov di, 342
-	
-
-PointsTrackerL2:
-	mov al, [si]
-	mov [es:di], ax     ;loop printing the points digits
-	inc si 
-	add di, 2 
-	loop PointsTrackerL2
-
-	
-	pop di
-	pop ax
-	pop si
-	pop cx
-	pop bx
-	pop bp
-
-	ret 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-start:
-	;call clrscr
-
-
-
-	;mov ah, 9h
-	;mov dx, nl	;nl
-	;int 21h
-
-	mov ah, 9h
-	mov dx, entrym1	; name of file msg
-	int 21h
-
-
-mov ah, 0x0a	;user input
-mov dx, fn
+;____________________________________
+m1: db 'Please Enter File name : $'
+m3:db 'Press Enter for default file (cave1.txt) $'
+error: db 'Given file does not exit : error occur $'
+error1: db 'Given file may have incomplete or invalid content : program is now quit $'
+m2: db 'cave1.txt 0'
+;__________________________________
+
+m5: db 'BOULDER DASH $'
+m6: db 'NUCES EDITION$'
+m7: db ' Arrow keys: move $'
+m8: db 'Esc: quit$'
+m9: db 'Score: $'
+m10: db ' Level: 1$'
+m11: db ' Level Complete   $'
+m12: db ' GAME OVER  !!!   $'
+m13: db 'Press any key to exit--  $'
+m14: db 'Welcome To The BOULDER DASH $'
+m15: db 'MADE BY TAYYAB AKHTAR AND AHMED SHAHZAD $'
+m16: db 'Collect diamonds to increase score $' 
+m17: db 'Beware Of Red Balls $'
+m18: db 'Get Home Safely To Complete The Level $'
+m19: db 'Goodluck On Your Adventure!!! $'
+m20: db 'Press Any Key To Continue... $'
+charpos: dw 0
+Score: dw 0
+finish: dw 0
+val: dw 0
+;___________________________________
+filename: db 15
+db 0
+times 15 db 0
+handle: dw 0
+buffer: times 1520  db 0
+
+;________________________
+clrscr:push bp
+mov bp,sp
+push ax
+push di
+push es
+push cx
+
+mov di,[bp+4]
+mov cx,[bp+6]
+
+mov ax,0xb800
+mov es,ax
+
+l2:mov word[es:di],0x0720
+add di,2
+loop l2
+
+pop cx
+pop es
+pop di
+pop ax
+pop bp
+ret
+;---------------------------------------helping funtions
+space:push dx
+push ax
+mov dl,' '
+mov ah,2
 int 0x21
+pop ax
+pop dx
+ret
 
-mov bh, 0		;input syntax format
-mov bl , [fn + 1]
-mov byte [fn + 2 + bx], 0
-mov byte [fn + 2 + bx + 1], '$'	;safeproofing from garbage values
-
-
-	mov ah, 9h
-	mov dx, nl   ;nl
-	int 21h
-
-
-mov ah, 0x9
-mov dx, chkm1		;msg reading
+nextline:push ax
+push dx
+mov dl,10
+mov ah,2
 int 0x21
-
-
-mov ah, 0x9
-mov dx, fn + 2	;show inputted file
+mov dl,13
+mov ah,2
 int 0x21
+pop dx
+pop ax
+ret
+next:push ax
+push dx
+mov dl,10
+mov ah,2
+int 0x21
+pop dx
+pop ax
+ret
 
-mov ah, 3dh
-mov dx, fn + 2	; 'open' the file
-mov al, 0
+num:push bp
+mov bp,sp
+push es
+push ax
+push bx
+push cx
+push dx
+push di
+
+mov ax,0xb800
+mov es,ax
+mov ax,[bp+4]
+mov bx,10
+mov cx,0
+
+nextdigit: mov dx,0
+div bx
+add dl,0x30
+push dx
+inc cx
+cmp ax,0
+jnz nextdigit
+
+prin:pop dx
+call charin
+loop prin
+
+pop di
+pop dx
+pop cx
+pop bx
+pop ax
+pop es
+pop bp
+ret 2
+charin:push dx
+push ax
+mov dh,0x07
+mov ah,2
 int 21h
-jc err1
-
-mov bx, ax	;store generated file handle in BX
-
-mov ah, 3fh
-mov cx, 2000	;actually read the damn file
-mov dx, buffer	;and store contents in BUFFER
+pop ax
+pop dx
+ret
+stringin:push dx
+push ax
+mov ah,9
 int 21h
-jc err2
-push ax	;save # of bytes read from file 
+pop ax
+pop dx
+ret
+setcur:push ax
+push bx
+mov ah,2
+mov bh,0
+int 10h
+pop bx
+pop ax
+ret
+color:push ax
+mov al,0
+int 10h
+pop ax
+ret
 
- 	mov ah, 9h
-	mov dx, nl   ;nl
-	int 21h
+;------------------------------------------------------
+hrzline:push di
+push ax
+push cx
+mov cx,80
+mov ax,0xb800
+mov es,ax
+p7:mov word[es:di],0x11DF
+add di,2
+loop p7
+pop di
+pop cx
+pop ax
+ret
+vrtline:push di
+push ax
+push cx
+mov cx,19
+mov ax,0xb800
+mov es,ax
+p10:mov word[es:di],0x11DF
+add di,160
+loop p10
+pop di
+pop cx
+pop ax
+ret
+;_____________________________________________border
+border:mov cx,22
+p1:call space
+loop p1
+mov cx,3
+p2:mov dl,16
+call charin
+loop p2
+call space
+mov dx,m5
+call stringin
+call space
+mov dl,3
+call charin
+call space
+call space
+mov dx,m6
+call stringin
+call space
+mov cx,3
+p4:mov dl,17
+call charin
+loop p4
+call nextline
+mov dx,m7
+call stringin
+mov cx,50
+p3:call space
+loop p3
+mov dx,m8
+call stringin
+call nextline
+;---------------------------------------------
+mov di,320
+call hrzline
+mov di,480
+call vrtline
+mov di,638
+call vrtline
+mov di,3520
+call hrzline
 
-mov ah, 0x9
-mov dx, chkm2		;msg successs
-int 0x21
+mov dx,0x1404
+call setcur
+mov cx,3
+p8:call nextline
+loop p8
+mov dx,m9
+call stringin
+mov ax,[Score]
+push ax
+call num
+mov cx,60
+p9:call space
+loop p9
+mov dx,m10
+call stringin
+ret
+;_______________________________________________________________
+read1:mov ax,0xb800
+mov es,ax
+mov bx,19
+mov si,buffer
+mov di,482
+j1:mov cx,80
+j2:cmp byte[si],'x'
+   jne skip2
+   mov word[es:di],0x07B1  
+;-------------------------------------------
+   skip2:cmp byte[si],'W'
+   jne skip3
+   mov word[es:di],0x11DF
 
+;-------------------------------------------------------
+   skip3:cmp byte[si],'B'
+   jne skip4
+   mov word[es:di],0x0409
+;------------------------------------------------------
+   skip4:cmp byte[si],'D'
+   jne skip5
+   mov word[es:di],0x0304
+;---------------------------------------------------
+   skip5:cmp byte[si],'T'
+   jne skip6
+   mov word[es:di],0x067F
+;----------------------------------------------------
+   skip6:cmp byte[si],'R'
+   jne skip8
+   mov word[charpos],di
+   mov word[es:di],0x0202
+;---------------------------------------------------
+   skip8:add si,1
+   add di,2
+   loop j2
+dec bx
+cmp bx,0
+ja j1
 
-	mov ah, 9h
-	mov dx, nl   ;nl
-	int 21h
+ret
+;___________________________________________________________________
+beep:push ax
+push dx
+mov ah,2
+mov dl,7
+int 21h
+mov ah,2
+mov dl,7
+int 21h
+pop dx
+pop ax
+ret
+;-------------------------------------------------------------------
+check1:push bx
+mov si,di                   ;left wall check
+sub si,2
+mov cx,19
+mov bx,480
+z1:cmp bx,si
+   je z2
+   add bx,160
+   loop z1
 
-;mov ah, 0x9
-;mov dx, chkm3		;msg press key
-;mov cx, 30
-;mov bl, 0x87
-;int 0x10
+   mov bx,word[es:si]
+   cmp bx,0x11DF   ;inside wall
+   je z2
+   cmp bx,0x0409   ;inside bolt
+   je z2
+   sub di,2
+pop bx
+   ret
+   z2:call beep
+pop bx
+   ret   
+;----------------------------------------------------------------------
+check2:push bx
+mov si,di                  ;right wall check
+add si,2
+mov cx,19
+mov bx,638
+z3:cmp bx,si
+   je z4
+   add bx,160
+   loop z3
 
+    mov bx,word[es:si]
+   cmp bx,0x11DF   ;inside wall
+   je z4
+   cmp bx,0x0409   ;inside bolt
+   je z4
+   add di,2
+pop bx
+   ret
+   z4:call beep
+pop bx
+   ret   
 
+;_---------------------------------------------------------
+check3:push bx
+mov si,di                ;up wall check
+sub si,160
+mov cx,78
+mov bx,322
+z5:cmp bx,si
+   je z6
+   add bx,2
+   loop z5
+   mov bx,word[es:si]
+   cmp bx,0x11DF   ;inside wall
+   je z6
+   cmp bx,0x0409   ;inside bolt
+   je z6
+   sub di,160
+   mov ax,word[es:di]
+   mov word[val],ax
+   pop bx
+   ret
+   z6:call beep
+pop bx
+   ret   
 
-
-
-
-MOV AH, 13h       ; Interrupt 0x10 function to print string with attribute
-MOV AL, 1         ; Display the string with attribute
-MOV BH, 0         ; Page number
-MOV BL, 0x0F      ; Set the foreground and background color
-MOV CX, 30 ; Length of the message string
-MOV DH, 24         ; Row position
-MOV DL, 0         ; Column position
-MOV BP, chkm3   ; DS:BP points to the message string
-OR  BL, 0x80      ; Set bit 7 to enable blinking
-INT 10h        
-
-
-
-
-
-
-
-
-
-	;mov ah, 9h
-	;mov dx, nl   ;nl
-	;int 21h
-
-
-
-
-
-mov ah, 0		;press any keystroke
-int 0x16
-
+;---------------------------------------------------------------
+check4:push bx
+mov si,di                   ;down wall check
+add si,160
+mov cx,78
+mov bx,3680
+z7:cmp bx,si
+   je z8
+   add bx,2
+   loop z7
+   mov bx,word[es:si]
+   cmp bx,0x11DF   ;inside wall
+   je z8
+   cmp bx,0x0409   ;inside bolt
+   je z8
+   add di,160
+pop bx
+   ret
+   z8:call beep
+pop bx
+   ret   
+   
+;__________________________________________________________________
+gameplay:cmp al, 0x48 ;up
+  jne skip10
+  mov word[es:di],0x0720
+  call check3
+jmp v2
+;----------------------------------------------------
+  skip10:cmp al,0x50   ;down
+  jne skip11
+   mov word[es:di],0x0720
+  call check4
+  mov ax,word[es:di]
+  mov word[val],ax
+jmp v2
+;----------------------------------------------------
+  skip11:cmp al,0x4d   ;right
+  jne skip12
+   mov word[es:di],0x0720
+  call check2
+  mov ax,word[es:di]
+  mov word[val],ax
+jmp v2
+;-----------------------------------------------------
+  skip12:cmp al,0x4b  ;left
+  jne v2
+  mov word[es:di],0x0720
+  call check1
+  mov ax,word[es:di]
+  mov word[val],ax
+;-----------------------------------------------------------
+ v2: mov bx,word[val]
+     cmp bx, 0x0304
+     jne skip31
+     add word[Score],1
+mov dx,0x1404
+call setcur
+mov cx,3
+p22:call nextline
+loop p22
+mov dx,m9
+call stringin
+mov ax,[Score]
+push ax
+call num
+call nextline
+jmp v1
+;__------------------------------------____
+  skip31:cmp bx, 0x067F
+     jne skip32
+mov word[finish],1
+mov word[es:di],0x8502
+mov dx,0x0100
+call setcur
+mov dx,m11
+call stringin
+a2:jmp v1
+;__------------------------------------____
+  skip32:mov si,di
+     sub di,160
+     mov bx,word[es:di]
+     cmp bx,0x0409
+     jne v1
+     mov word[finish],1
+     mov di,si
+     mov word[es:di],0x8402
+     mov dx,0x0100
+     call setcur
+     mov dx,m12
+     call stringin
+;__-----------------------------------_____
+ v1:mov di,si
+ cmp word[finish],1
+    jne v3
+    ret
+v3:mov word[es:di],0x0202
+ret
+;_______________________________________________________________
+start: push 0
+push 2000
 call clrscr
-call prtPoints
+mov dx, 0
+call setcur
+mov dx, m14
+call stringin
+call nextline
+mov dx, m15
+call stringin
+call nextline
+mov dx, m16
+call stringin
+call nextline
+mov dx, m17
+call stringin
+call nextline
+mov dx, m18
+call stringin
+call nextline
+mov dx, m19
+call stringin
+call nextline
+mov dx, m20
+call stringin
+call nextline
+mov ah, 0
+int 0x16
+push 0
+push 2000
+call clrscr
+mov dx,m3
+call stringin
+call nextline
+mov dx,m1
+call stringin
 
-	;mov ah, 9h
-	;mov dx, nl   ;nl
-	;int 21h
+mov dx,filename
+mov ah,0Ah
+int 0x21
+push 0
+push 2000
+call clrscr
+;___________________________________
+mov ah,2
+mov bh,0
+mov dx,0000h
+int 10h
+;_________________________________
 
-;---------------------------------------------------- print how many bytes in file
+mov bh,0
+mov bl,[filename+1]
+cmp bl,2
+jb skip
+mov byte[filename+2+bx],'0'
 
 
+mov ah,3Dh
+mov dx,filename+2
+mov al,0
+int 21h
+mov word[handle],ax
+jnc continue
 
-mov ah, 9h
-mov dx, m3	;msg number of bytes
+mov dx,error
+mov ah,9
+int 0x21
+jmp exit
+;____________read file______________________and error handling related to file
+skip:mov ah,3Dh
+mov dx,m2
+mov al,0
+int 21h
+mov word[handle],ax
+jnc continue
+
+mov dx,error
+call stringin
+
+
+jmp exit
+continue:mov ah,3Fh
+mov bx,[handle]
+mov cx,1520
+mov dx,buffer
 int 21h
 
-pop ax	;get # of bytes to print it
+mov cx,1520
+mov si,buffer
+mov di,0
+l19:cmp byte[si],'x'
+    je ad
+    cmp byte[si],'W'
+    je ad
+    cmp byte[si],'D'
+    je ad
+    cmp byte[si],'B'
+    je ad
+    cmp byte[si],'T'
+    je ad
+    cmp byte[si],'R'
+    je ad
+    jmp skip1
+  ad: add di,1
+skip1:add si,1
+loop l19
+
+cmp di,1482
+jb err
+jmp further
+err:mov dx,error1
+call stringin
+
+jmp exit
+
+;_______________________________________
+
+further:push 0
+push 2000
+call clrscr
+mov ah,2
+mov bh,0
+mov dx,0000h
+int 10h
+
+call border
+call nextline
+call read1
+mov di,word[charpos]
+mov ax,0xb800
+mov es,ax
+
+main1:mov ah,0
+int 0x16
+in al,0x60
+cmp al,01
+je exit
+call gameplay
+x1:cmp word[finish],1
+je exit
+mov al,0x20
+out 0x20,al
+jmp main1
+
+exit:mov dx,0x1404
+call setcur
+mov cx,4
+p23:call nextline
+loop p23
+mov dx,m13
+call stringin
+mov ah,0
+int 0x16
+mov ax,0x4c00
+int 0x21
 
-XOR BX, BX          ; Set BX to 0 (used to count digits)
-MOV SI,  buff   ; Point SI to the buffer
-add si, 3
-; Convert the value to a string
 
-convert:
-XOR DX, DX          ; Clear DX for division
-MOV CX, 10          ; Divide by 10 to extract the last digit
-DIV CX              ; Divide AX by CX
-ADD DL, '0'         ; Convert the remainder to ASCII
-MOV [SI], DL        ; Store the digit in the buffer
-dec SI              ; Move to the next position in the buffer
-INC BX              ; Increment the digit count
-CMP AX, 0           ; Check if value is 0
-JNE convert         ; If not, repeat the conversion
 
-; Display the string on the screen
-MOV CX, BX          ; Load the digit count into CX
-MOV SI, buff  ; Point SI to the start of the buffer
 
-print:
-MOV AL, [SI]        ; Load the character from memory
-CMP AL, 0           ; Check for end of string
-JE out1		; Jump if end of string
-MOV AH, 0Eh         ; BIOS function to print character
-MOV BH, 0           ; Display page (0 for text mode)
-MOV BL, 7           ; Attribute (7 for white on black)
-INT 10h             ; Call BIOS
-INC SI              ; Point to next character
-JMP print           ;
-
-out1:	mov ah, 9h
-	mov dx, nl
-	int 21h
-
-
-;------------------------------------------------ now print file data
-mov si, buffer
-
-mov ax, 0xb800
-mov es, ax
-mov di, 480	   ;top border
-mov cx, 80
-
-topBord:	mov word[es:di], 0x6020
-	add di, 2
-	loop topBord
-
-
-mov ax, 0xb800
-mov es, ax
-mov di, 640
-
-mov cx, di
-
-placebord:    mov word [es:di], 0x6020	;border 
-	     add di, 2
-	     add cx, 160
-
-
-nextchar:	cmp di, cx
-	je placebord
-
-	mov al, [si]
-	mov ah, 0x07
-
-	cmp al, 0
-	je endOfPrinting
-
-
-
-notborder: cmp al, 0xA
-	je notA
-	cmp al, 0xD
-	je notA
-
-
-	jmp not01
-
-notA:	add si, 2
-	mov word [es:di], 0x6020	;border 
-	add di, 2
-	jmp nextchar
-
-
-not01:	cmp al,0x78	;found dirt 
-	jne notDirt
-	mov ah, 0x08
-	mov al, 0xB0		
-	jmp not2
-
-
-notDirt:	cmp al,0x52	;found rockford 
-	jne notRockford
-	push di		;save starting [psition
-	mov ah, 0x84
-	mov al, 0x02		
-	jmp not2
-
-notRockford:    cmp al,0x54	;found target/exit 
-	jne notTarget
-	push di
-	mov ah, 0x50	
-	mov al, 0x7F		
-	jmp not2
-
-notTarget:	   cmp al,0x42	;found boulder 
-	jne notBoulder
-	mov ah, 0x06
-	mov al, 0x09		
-	jmp not2
-
-notBoulder:   cmp al,0x44	;found diamond 
-	jne notDiamond
-	mov ah, 0x03
-	mov al, 0x04		
-	jmp not2
-
-
-notDiamond:  cmp al,0x57	;found wall 
-	jne notWall
-	mov ah, 0x60
-	mov al, 0x20		
-	jmp not2
-
-notWall:	jmp whathuh
-
-
-
-
-;not:	;mov ah,0eh
-	;mov bh, 0
-	;mov bl, 7
-	;int 10h
-	;inc si
-	;jmp nextchar
-
-not2:	mov [es:di], ax
-	add di, 2
-	inc si
-	jmp nextchar
-
-
-endOfPrinting: mov word [es:di], 0x6020
-
-mov ax, 0xb800
-mov es, ax
-mov cx, 81	;bottom border
-
-
-botBord:	mov word[es:di], 0x6020
-	add di, 2
-	loop botBord
-
-;--------------------------------------------------- now start contorlling
-
-mov ah, 1        ; Set AH to 1 to hide the cursor
-mov ch, 20h      ; Set CH to 20h to move the cursor off the screen
-int 10h  
-
-pop bx 	;save exit pos 
-pop di	;store strating in di
-mov dx, 0
-
-CheckArrowKey:
-  mov ah, 0       ; Set AH to 0 to read a character from the keyboard buffer
-  int 16h         ; Call the BIOS interrupt to read a character from the keyboard buffer
-    
-  cmp al, 0x1B	;escape
-	je end
-
-  ;cmp ah, 0       ; Check if the scan code is in AH (should be 0 for arrow keys)
-  ;jne CheckArrowKey  ; If not, keep reading from the keyboard buffer until a valid key is pressed
-hh2:  cmp ah, 48h     ; Check if up arrow was pressed (scan code 48h)
-  je HandleUpArrow   ; If so, jump to the code to handle the up arrow
-  cmp ah, 50h     ; Check if down arrow was pressed (scan code 50h)
-  je HandleDownArrow  ; If so, jump to the code to handle the down arrow
-  cmp ah, 4Bh     ; Check if left arrow was pressed (scan code 4Bh)
-  je HandleLeftArrow  ; If so, jump to the code to handle the left arrow
-  cmp ah, 4Dh     ; Check if right arrow was pressed (scan code 4Dh)
-  je HandleRightArrow  ; If so, jump to the code to handle the right arrow
-  jmp CheckArrowKey 
-
-
-HandleUpArrow:;je end
-	mov cx, di	   ;save current pos
-	sub di, 160  ;the new position (before all checks)
-
-	cmp di, bx  ;check if target/exit  reached
-	je end
-	
-	mov ax, word [es:di]     ; store in ax the character which is at new position
-
-
-	cmp ax, 0x0304	;check if new pos is diamondo
-	jne UpDiaNot	
-
-	inc dx
-	push dx
-	call PointsTracker	;update points on screen
-	pop dx
-	jmp HalfGoodUP2	
-
-
-UpDiaNot:
-	cmp ax, 0x6020       ;check if new pos is  wall
-	jne HalfGoodUP1
-
-	add di, 160       ;if yes dont move
-	jmp CheckArrowKey	
-
-HalfGoodUP1:  cmp ax,0x0609    ;check for bouldah
-	jne HalfGoodUP2
-
-	add di, 160
-	mov word [es:di], 0x8458
-	jmp endBoul
-
-HalfGoodUP2:  sub di, 160 
-	mov ax, word [es:di]
-	cmp ax,0x0609    ;check for bouldah
-	jne AllGoodUp
-
-	add di, 160
-	mov word [es:di], 0x8458
-
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720    ;empty prev pos
-	pop di
-	jmp endBoul
-
-
-
-AllGoodUp: add di, 160 
-	mov word [es:di], 0x8B02  ;go to new pos
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720    ;empty prev pos
-	pop di
-	jmp CheckArrowKey
-
-
-HandleDownArrow:;je end
-	mov cx, di
-	add di, 160
-	cmp di, bx
-	je endTarget
-
-	mov ax, word [es:di]
-
-
-	cmp ax, 0x0304	;check if new pos is diamondo
-	jne DownDiaNot	
-
-	inc dx
-	push dx
-	call PointsTracker	;update points on screen
-	pop dx
-	jmp AllGoodDown	
-
-
-DownDiaNot:	
-	cmp ax, 0x6020
-	jne HalfGoodDown  
-
-	sub di, 160
-	jmp CheckArrowKey
-
-HalfGoodDown:     cmp ax,0x0609    ;check for bouldah
-	jne AllGoodDown
-
-	sub di, 160
-	jmp CheckArrowKey
-
-AllGoodDown:   mov word [es:di], 0x8C02
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720
-	pop di
-	jmp CheckArrowKey
-
-
-
-HandleLeftArrow:;je end
-	mov cx, di
-	sub di, 2
-	cmp di, bx
-	je endTarget
-
-	mov ax, word [es:di]
-
-
-	cmp ax, 0x0304	;check if new pos is diamondo
-	jne LeftDiaNot
-
-	inc dx
-	push dx
-	call PointsTracker	;update points on screen
-	pop dx
-	jmp HalfGoodLeft2	
-
-
-LeftDiaNot:
-
-	cmp ax, 0x6020
-	jne HalfGoodLeft1
-
-	add di, 2
-	jmp CheckArrowKey
-
-
-HalfGoodLeft1:  cmp ax,0x0609    ;check for bouldah on left
-	jne HalfGoodLeft2
-
-	add di, 2		;if yes dont move
-	jmp CheckArrowKey
-
-HalfGoodLeft2: sub di, 160 
-	mov ax, word [es:di]
-	cmp ax,0x0609    ;check for bouldah
-	jne AllGoodLeft  
-
-	add di, 160
-	mov word [es:di], 0x8458
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720    ;empty prev pos
-	pop di
-	jmp endBoul
-
-
-AllGoodLeft: add di ,160 
-	mov word [es:di], 0x8D02
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720
-	pop di
-	jmp CheckArrowKey
-
-
-
-
-HandleRightArrow:;je end
-	mov cx, di
-	add di, 2
-	cmp di, bx
-	je endTarget
-
-	mov ax, word [es:di]
-
-	cmp ax, 0x0304	;check if new pos is diamondo
-	jne RightDiaNot
-
-	inc dx
-	push dx
-	call PointsTracker	;update points on screen
-	pop dx
-	jmp HalfGoodRight2	
-
-
-RightDiaNot:
-	cmp ax, 0x6020
-	jne HalfGoodRight1  
-
-	sub di, 2
-	jmp CheckArrowKey
-
-HalfGoodRight1:  cmp ax,0x0609    ;check for bouldah on left
-	jne HalfGoodRight2
-
-	sub di, 2		;if yes dont move
-	jmp CheckArrowKey
-
-HalfGoodRight2:  sub di, 160 
-	mov ax, word [es:di]
-	cmp ax,0x0609    ;check for bouldah
-	jne AllGoodRight  
-
-	add di, 160
-	mov word [es:di], 0x8458
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720    ;empty prev pos
-	pop di
-	jmp endBoul
-
-
-AllGoodRight: add di, 160 
-	mov word [es:di], 0x8A02
-	push di
-	mov di, cx
-	mov word[es:di], 0x0720
-	pop di
-	jmp CheckArrowKey
-
-
-endBoul:	mov cx, dx   ; total points scored 
-
-	mov ah, 9h
-	mov dx, nl
-	int 21h
-
-	mov ah, 9h
-	mov dx, m61
-	int 21h
-	jmp endFinal
-
-endTarget: mov cx, dx   ; total points scored 
-
-	mov ah, 9h
-	mov dx, nl
-	int 21h	
-
-
-	cmp cx, 10
-	jl LessTen	
-
-	cmp cx, 27
-	jl LessHalf
-
-
-
-	mov ah, 9h
-	mov dx, m64
-	int 21h
-	jmp endFinal
-
-
-
-LessTen:   mov ah, 9h
-	mov dx, m62
-	int 21h
-	jmp endFinal
-
-LessHalf:    mov ah, 9h
-	mov dx, m63
-	int 21h
-	jmp endFinal
-
-
-
-end: 	mov cx, dx   	; end reached from escape ley
-
-	mov ah, 9h
-	mov dx, nl
-	int 21h
-
-	mov ah, 9h
-	mov dx, m65
-	int 21h
-
-
-endFinal:	mov ax, 0xb800
-	mov es, ax
-	mov di, 3810
-
-	push cx
-
-	mov si, m41
-	mov ah, 0x0f
-	mov cx, 8
-
-endPointsL1:
-	mov al, [si]
-	mov [es:di], ax    
-	inc si
-	add di, 2 
-	loop endPointsL1
-
-
-	mov ah, 0x0f
-	mov si, pts
-	mov cx, 3
-	
-	
-
-endTrackerL2:
-	mov al, [si]
-	mov [es:di], ax     ;loop printing the points digits
-	inc si 
-	add di, 2 
-	loop endTrackerL2
-
-
-
-
-
-
-
-
-
-
-
-
-mov ax, 0x4c00
-	int 21h
